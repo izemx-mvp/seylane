@@ -464,49 +464,58 @@ function NewSearchDialog({ open, setOpen }: { open: boolean; setOpen: (v: boolea
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button className="gap-2"><Sparkles className="h-4 w-4" /> Nouvelle recherche</Button></DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Nouvelle recherche de sourcing</DialogTitle></DialogHeader>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label>Client</Label><Input value={client} onChange={(e) => setClient(e.target.value)} placeholder="Ex : Atlas Industries" /></div>
-            <div><Label>Nom du poste à sourcer</Label><Input value={poste} onChange={(e) => setPoste(e.target.value)} placeholder="Ex : Directeur Industriel" /></div>
-            <div><Label>Marque</Label>
-              <Select value={brand} onValueChange={(v) => setBrand(v as typeof brand)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{["Executive", "Staffing"].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
-              </Select>
+      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto scroll-fade">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-gold" /> Nouvelle recherche de sourcing IA</DialogTitle>
+          <p className="text-xs text-muted-foreground">Décrivez le poste, la géographie et la grille de scoring — l'IA identifie les meilleurs profils.</p>
+        </DialogHeader>
+
+        <div className="space-y-5">
+          <section className="rounded-xl border border-border/70 bg-card/40 p-4">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2"><Building2 className="h-3.5 w-3.5 text-gold" /> Mission & client</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Client</Label><Input value={client} onChange={(e) => setClient(e.target.value)} placeholder="Ex : Atlas Industries" /></div>
+              <div><Label>Nom du poste à sourcer</Label><Input value={poste} onChange={(e) => setPoste(e.target.value)} placeholder="Ex : Directeur Industriel" /></div>
+              <div><Label>Marque</Label>
+                <Select value={brand} onValueChange={(v) => setBrand(v as typeof brand)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{["Executive", "Staffing"].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Séniorité</Label>
+                <Select value={seniority} onValueChange={setSeniority}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{["Junior", "Confirmé", "Senior", "Cadre dirigeant"].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2"><Label>Brief de la mission</Label><Textarea rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Contexte du poste, enjeux, culture d'entreprise…" /></div>
             </div>
-            <div><Label>Séniorité</Label>
-              <Select value={seniority} onValueChange={setSeniority}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{["Junior", "Confirmé", "Senior", "Cadre dirigeant"].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
-              </Select>
+          </section>
+
+          <section className="rounded-xl border border-border/70 bg-card/40 p-4">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2"><Search className="h-3.5 w-3.5 text-gold" /> Compétences & géographie</div>
+            <TokenField label="Compétences requises" placeholder="Ajouter une compétence…" tokens={skills} setTokens={setSkills}
+              suggestions={["Lean", "Leadership", "P&L", "SAP", "Six Sigma", "Anglais", "Gestion de projet", "QSE"]} />
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <TokenField label="Pays (multi-choix)" placeholder="Ajouter un pays…" tokens={countries} setTokens={setCountries} suggestions={COUNTRY_OPTIONS} />
+              <TokenField label="Villes (multi-choix)" placeholder="Ajouter une ville…" tokens={cities} setTokens={setCities} suggestions={CITY_OPTIONS} />
             </div>
-          </div>
+          </section>
 
-          <TokenField label="Compétences requises" placeholder="Ajouter une compétence…" tokens={skills} setTokens={setSkills}
-            suggestions={["Lean", "Leadership", "P&L", "SAP", "Six Sigma", "Anglais", "Gestion de projet", "QSE"]} />
-          <div className="grid grid-cols-2 gap-3">
-            <TokenField label="Pays (multi-choix)" placeholder="Ajouter un pays…" tokens={countries} setTokens={setCountries} suggestions={COUNTRY_OPTIONS} />
-            <TokenField label="Villes (multi-choix)" placeholder="Ajouter une ville…" tokens={cities} setTokens={setCities} suggestions={CITY_OPTIONS} />
-          </div>
-
-          <div><Label>Brief de la mission</Label><Textarea rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Contexte du poste, enjeux, culture d'entreprise…" /></div>
-
-          <div className="border rounded-xl p-4 bg-muted/20">
+          <section className="rounded-xl border border-border/70 bg-card/40 p-4">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <Label className="text-sm">Critères de scoring & pondération</Label>
-                <p className="text-xs text-muted-foreground">La somme des pondérations doit être exactement 100%.</p>
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-2"><Sparkles className="h-3.5 w-3.5 text-gold" /> Critères de scoring & pondération</div>
+                <p className="text-xs text-muted-foreground mt-1">La somme des pondérations doit être exactement 100%.</p>
               </div>
-              <span className={cn("text-sm font-semibold px-2 py-1 rounded-lg", balanced ? "bg-success/15 text-success" : "bg-destructive/10 text-destructive")}>
+              <span className={cn("text-sm font-semibold px-3 py-1 rounded-full", balanced ? "bg-success/15 text-success" : "bg-destructive/10 text-destructive")}>
                 {totalWeight}%
               </span>
             </div>
             <div className="space-y-2">
               {scoring.map((c) => (
-                <div key={c.id} className="flex items-center gap-2">
-                  <Input value={c.label} onChange={(e) => setLabel(c.id, e.target.value)} className="flex-1 h-9" />
+                <div key={c.id} className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-2 py-1.5">
+                  <Input value={c.label} onChange={(e) => setLabel(c.id, e.target.value)} className="flex-1 h-9 border-transparent bg-transparent focus-visible:bg-card" />
                   <Input type="number" min={0} max={100} value={c.weight} onChange={(e) => setWeight(c.id, Number(e.target.value))} className="w-20 h-9" />
                   <span className="text-xs text-muted-foreground">%</span>
                   <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => removeCriterion(c.id)}><X className="h-4 w-4" /></Button>
@@ -517,22 +526,24 @@ function NewSearchDialog({ open, setOpen }: { open: boolean; setOpen: (v: boolea
               <Button type="button" variant="outline" size="sm" onClick={addCriterion}><Plus className="h-3 w-3 mr-1" /> Critère</Button>
               <Button type="button" variant="outline" size="sm" onClick={normalize} disabled={totalWeight === 0}>Normaliser à 100%</Button>
             </div>
-          </div>
+          </section>
 
-          <div><Label>Sources</Label>
-            <div className="grid grid-cols-3 gap-2 mt-2">
+          <section className="rounded-xl border border-border/70 bg-card/40 p-4">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2"><Send className="h-3.5 w-3.5 text-gold" /> Sources de recherche</div>
+            <div className="grid grid-cols-3 gap-2">
               {["LinkedIn", "Web", "Réseau Seylane"].map((x) => (
-                <div key={x} className="flex items-center justify-between border rounded px-3 py-2 text-sm"><span>{x}</span><Switch defaultChecked /></div>
+                <div key={x} className="flex items-center justify-between border rounded-lg px-3 py-2 text-sm bg-background/60"><span>{x}</span><Switch defaultChecked /></div>
               ))}
             </div>
-          </div>
+          </section>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-          <Button onClick={launch} disabled={loading || !balanced}>
-            {loading ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Recherche IA…</> : <><Search className="h-4 w-4 mr-2" /> Lancer la recherche</>}
+          <Button onClick={launch} disabled={loading || !balanced} className="gap-2">
+            {loading ? <><RefreshCw className="h-4 w-4 animate-spin" /> Recherche IA…</> : <><Search className="h-4 w-4" /> Lancer la recherche</>}
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
