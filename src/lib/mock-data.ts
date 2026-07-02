@@ -167,6 +167,7 @@ export type AppState = {
   cmConfig: {
     logo: string;
     objectives: string[];
+    services: string[];
     platformSettings: {
       linkedin: { enabled: boolean; tone: string; frequency: string };
       instagram: { enabled: boolean; tone: string; frequency: string };
@@ -182,6 +183,9 @@ export type AppState = {
   faqs: Faq[];
   documents: DocFile[];
   contacts: Contact[];
+  serviceFiches: ServiceFiche[];
+  users: UserAccount[];
+  currentUserId: string;
 };
 
 const img = (seed: string) => `https://images.unsplash.com/photo-${seed}?auto=format&fit=crop&w=800&q=80`;
