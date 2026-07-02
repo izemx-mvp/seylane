@@ -131,14 +131,18 @@ function ContactsTab() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {(() => null)()}
+                {pageSlice.map((r) => (
                   <tr key={r.contact.id} onClick={() => setSelected(r)} className="border-t hover:bg-muted/30 cursor-pointer transition-colors">
                     <td className="p-3 font-medium">{r.contact.name}</td>
                     <td className="p-3">{r.campaign.linkedPoste ?? "—"}</td>
                     <td className="p-3 text-muted-foreground">{r.campaign.linkedClient ?? "—"}</td>
                     <td className="p-3"><Badge variant="outline">{r.contact.channel}</Badge></td>
                     <td className="p-3 text-xs">{r.contact.sendStatus}</td>
-                    <td className="p-3"><span className={cn("text-[11px] px-2 py-0.5 rounded-full", classifStyle(r.contact.classification))}>{r.contact.classification}</span></td>
+                    <td className="p-3">
+                      <span className={cn("text-[11px] px-2 py-0.5 rounded-full", classifStyle(r.contact.classification))}>{r.contact.classification}</span>
+                      {r.contact.assignedHumanId && <Badge variant="outline" className="ml-1 text-[10px]"><UserCog className="h-3 w-3 mr-1" />Humain</Badge>}
+                    </td>
                     <td className="p-3 text-xs text-muted-foreground">{new Date(r.contact.lastAt).toLocaleString("fr-FR")}</td>
                   </tr>
                 ))}
@@ -150,6 +154,8 @@ function ContactsTab() {
           </div>
         </CardContent>
       </Card>
+      <PaginationBar page={page} pageCount={pageCount} onPage={setPage} pageSize={pageSize} onPageSize={setPageSize} total={rows.length} />
+
 
       <Sheet open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
         <SheetContent className="w-full sm:w-[520px] sm:max-w-none overflow-y-auto">
