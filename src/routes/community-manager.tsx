@@ -302,8 +302,6 @@ function IdeasTab() {
           <SelectContent>
             <SelectItem value="all">Tous statuts</SelectItem>
             <SelectItem value="draft">Brouillon</SelectItem>
-            <SelectItem value="scheduled">Programmé</SelectItem>
-            <SelectItem value="published">Publié</SelectItem>
           </SelectContent>
         </Select>
       </div>
