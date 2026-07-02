@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import type { Prospect } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/prospection")({
-  head: () => ({ meta: [{ title: "Prospection — Seylane" }] }),
+  head: () => ({ meta: [{ title: "Agent IA Prospection — Seylane" }] }),
   component: ProspectionPage,
 });
 
