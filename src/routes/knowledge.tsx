@@ -92,7 +92,7 @@ function FAQTab() {
         <table className="w-full text-sm">
           <thead className="bg-muted/60 text-xs uppercase tracking-wider"><tr>{["Question", "Catégorie", "Statut", ""].map((h) => <th key={h} className="text-left p-3">{h}</th>)}</tr></thead>
           <tbody>
-            {filtered.map((f) => (
+            {slice.map((f) => (
               <tr key={f.id} className="border-t hover:bg-muted/30">
                 <td className="p-3 max-w-md"><div className="font-medium">{f.q}</div><div className="text-xs text-muted-foreground line-clamp-1">{f.a}</div></td>
                 <td className="p-3"><Badge variant="secondary">{f.category}</Badge></td>
@@ -113,6 +113,8 @@ function FAQTab() {
           </tbody>
         </table>
       </CardContent></Card>
+      <PaginationBar page={page} pageCount={pageCount} onPage={setPage} pageSize={pageSize} onPageSize={setPageSize} total={filtered.length} />
+
 
       <Dialog open={!!edit || showNew} onOpenChange={(v) => !v && close()}>
         <DialogContent>
