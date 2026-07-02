@@ -188,6 +188,8 @@ function ConfigTab() {
         </CardContent>
       </Card>
 
+      <ServicesConfigCard />
+
       <div className="flex justify-end">
         <Button className="gap-2" onClick={() => toast.success("Configuration enregistrée")}><Check className="h-4 w-4" /> Enregistrer</Button>
       </div>
