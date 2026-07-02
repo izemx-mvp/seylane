@@ -439,70 +439,163 @@ function IdeaSheet({ idea, onClose }: { idea: Idea | null; onClose: () => void }
 /* -------- Calendar -------- */
 function CalendarTab() {
   const { state } = useStore();
+  const [view, setView] = useState<"mois" | "semaine" | "jour" | "agenda">("mois");
   const [monthOffset, setMonthOffset] = useState(0);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [dayOffset, setDayOffset] = useState(0);
   const [selected, setSelected] = useState<Idea | null>(null);
 
   const now = new Date();
+
+  const evChip = (e: Idea) => (
+    <button key={e.id} onClick={() => setSelected(e)}
+      className={cn("w-full text-left truncate text-[10px] px-1.5 py-1 rounded flex items-center gap-1.5 hover:opacity-80 transition-opacity",
+        e.status === "published" ? "bg-success/15 text-success" : "bg-primary/10 text-primary")}>
+      <PlatformDots platforms={e.platforms} />
+      <span className="truncate">{e.title}</span>
+    </button>
+  );
+
+  const eventsOn = (d: Date) => state.ideas.filter((i) => {
+    if (!i.scheduledFor) return false;
+    const dt = new Date(i.scheduledFor);
+    return dt.getFullYear() === d.getFullYear() && dt.getMonth() === d.getMonth() && dt.getDate() === d.getDate();
+  });
+
+  // Month view
   const cur = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
   const monthName = cur.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
   const startDay = (cur.getDay() + 6) % 7;
   const daysInMonth = new Date(cur.getFullYear(), cur.getMonth() + 1, 0).getDate();
-
   const cells: Array<{ date: Date | null; events: Idea[] }> = [];
   for (let i = 0; i < startDay; i++) cells.push({ date: null, events: [] });
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(cur.getFullYear(), cur.getMonth(), d);
-    const events = state.ideas.filter((i) => {
-      if (!i.scheduledFor) return false;
-      const dt = new Date(i.scheduledFor);
-      return dt.getFullYear() === date.getFullYear() && dt.getMonth() === date.getMonth() && dt.getDate() === d;
-    });
-    cells.push({ date, events });
+    cells.push({ date, events: eventsOn(date) });
   }
+
+  // Week view — start Monday
+  const baseWeek = new Date(now); baseWeek.setDate(now.getDate() + weekOffset * 7);
+  const monday = new Date(baseWeek); monday.setDate(baseWeek.getDate() - ((baseWeek.getDay() + 6) % 7));
+  const weekDays = Array.from({ length: 7 }, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
+  const weekLabel = `Sem. du ${monday.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`;
+
+  // Day view
+  const dayDate = new Date(now); dayDate.setDate(now.getDate() + dayOffset);
+  const dayLabel = dayDate.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const dayEvents = eventsOn(dayDate);
+
+  // Agenda
+  const agenda = [...state.ideas].filter((i) => i.scheduledFor).sort((a, b) => (a.scheduledFor! < b.scheduledFor! ? -1 : 1));
+
+  const nav = () => {
+    if (view === "mois") return { prev: () => setMonthOffset(monthOffset - 1), next: () => setMonthOffset(monthOffset + 1), today: () => setMonthOffset(0), label: monthName };
+    if (view === "semaine") return { prev: () => setWeekOffset(weekOffset - 1), next: () => setWeekOffset(weekOffset + 1), today: () => setWeekOffset(0), label: weekLabel };
+    if (view === "jour") return { prev: () => setDayOffset(dayOffset - 1), next: () => setDayOffset(dayOffset + 1), today: () => setDayOffset(0), label: dayLabel };
+    return { prev: () => {}, next: () => {}, today: () => {}, label: "Agenda" };
+  };
+  const N = nav();
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => setMonthOffset(monthOffset - 1)}><ChevronLeft className="h-4 w-4" /></Button>
-          <div className="font-display text-lg capitalize min-w-[200px] text-center tracking-tight">{monthName}</div>
-          <Button variant="outline" size="icon" onClick={() => setMonthOffset(monthOffset + 1)}><ChevronRight className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm" onClick={() => setMonthOffset(0)}>Aujourd'hui</Button>
+          <Button variant="outline" size="icon" onClick={N.prev} disabled={view === "agenda"}><ChevronLeft className="h-4 w-4" /></Button>
+          <div className="font-display text-lg capitalize min-w-[200px] text-center tracking-tight">{N.label}</div>
+          <Button variant="outline" size="icon" onClick={N.next} disabled={view === "agenda"}><ChevronRight className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={N.today}>Aujourd'hui</Button>
+        </div>
+        <div className="inline-flex bg-muted/60 p-1 rounded-full border border-border/60">
+          {(["mois", "semaine", "jour", "agenda"] as const).map((v) => (
+            <button key={v} onClick={() => setView(v)}
+              className={cn("px-4 py-1.5 text-xs font-medium rounded-full capitalize transition-all",
+                view === v ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+              {v}
+            </button>
+          ))}
         </div>
       </div>
-      <Card className="soft-shadow overflow-hidden">
-        <div className="grid grid-cols-7 border-b bg-muted/40">
-          {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => (
-            <div key={d} className="p-2 text-xs font-medium text-muted-foreground text-center uppercase tracking-wider">{d}</div>
-          ))}
-        </div>
-        <div className="grid grid-cols-7">
-          {cells.map((cell, i) => (
-            <div key={i} className={cn("min-h-[120px] border-b border-r p-1.5 text-xs", !cell.date && "bg-muted/20")}>
-              {cell.date && (
-                <>
-                  <div className="text-muted-foreground mb-1 text-[11px]">{cell.date.getDate()}</div>
-                  <div className="space-y-1">
-                    {cell.events.map((e) => (
-                      <button key={e.id} onClick={() => setSelected(e)}
-                        className={cn("w-full text-left truncate text-[10px] px-1.5 py-1 rounded flex items-center gap-1.5 hover:opacity-80 transition-opacity",
-                          e.status === "published" ? "bg-success/15 text-success" : "bg-primary/10 text-primary")}>
-                        <PlatformDots platforms={e.platforms} />
-                        <span className="truncate">{e.title}</span>
-                      </button>
-                    ))}
+
+      {view === "mois" && (
+        <Card className="soft-shadow overflow-hidden">
+          <div className="grid grid-cols-7 border-b bg-muted/40">
+            {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => (
+              <div key={d} className="p-2 text-xs font-medium text-muted-foreground text-center uppercase tracking-wider">{d}</div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7">
+            {cells.map((cell, i) => (
+              <div key={i} className={cn("min-h-[120px] border-b border-r p-1.5 text-xs", !cell.date && "bg-muted/20")}>
+                {cell.date && (
+                  <>
+                    <div className="text-muted-foreground mb-1 text-[11px]">{cell.date.getDate()}</div>
+                    <div className="space-y-1">{cell.events.map(evChip)}</div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {view === "semaine" && (
+        <Card className="soft-shadow overflow-hidden">
+          <div className="grid grid-cols-7">
+            {weekDays.map((d) => {
+              const evs = eventsOn(d);
+              const isToday = d.toDateString() === new Date().toDateString();
+              return (
+                <div key={d.toISOString()} className="border-r border-b p-2 min-h-[300px]">
+                  <div className={cn("text-xs font-medium mb-2 pb-2 border-b", isToday && "text-primary")}>
+                    <div className="uppercase tracking-wider text-[10px] text-muted-foreground">{d.toLocaleDateString("fr-FR", { weekday: "short" })}</div>
+                    <div className="text-lg font-display">{d.getDate()}</div>
                   </div>
-                </>
-              )}
-            </div>
+                  <div className="space-y-1">{evs.map(evChip)}</div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      {view === "jour" && (
+        <Card className="soft-shadow"><CardContent className="p-6">
+          {dayEvents.length === 0 ? (
+            <div className="py-16 text-center text-sm text-muted-foreground">Aucune publication ce jour.</div>
+          ) : (
+            <div className="space-y-2">{dayEvents.map((e) => (
+              <button key={e.id} onClick={() => setSelected(e)} className="w-full text-left border rounded-lg p-3 hover:bg-muted/40 transition-colors flex items-center gap-3">
+                <PlatformDots platforms={e.platforms} size="md" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{e.title}</div>
+                  <div className="text-xs text-muted-foreground">{new Date(e.scheduledFor!).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</div>
+                </div>
+                <Badge variant={e.status === "published" ? "default" : "secondary"}>{e.status}</Badge>
+              </button>
+            ))}</div>
+          )}
+        </CardContent></Card>
+      )}
+
+      {view === "agenda" && (
+        <Card className="soft-shadow"><CardContent className="p-4 space-y-1">
+          {agenda.length === 0 && <div className="py-10 text-center text-sm text-muted-foreground">Aucune publication planifiée.</div>}
+          {agenda.map((e) => (
+            <button key={e.id} onClick={() => setSelected(e)} className="w-full text-left border rounded-lg p-3 hover:bg-muted/40 transition-colors flex items-center gap-3">
+              <div className="w-24 text-xs text-muted-foreground">{new Date(e.scheduledFor!).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</div>
+              <PlatformDots platforms={e.platforms} />
+              <div className="flex-1 min-w-0 font-medium truncate">{e.title}</div>
+              <Badge variant={e.status === "published" ? "default" : "secondary"}>{e.status}</Badge>
+            </button>
           ))}
-        </div>
-      </Card>
+        </CardContent></Card>
+      )}
 
       <IdeaSheet idea={selected} onClose={() => setSelected(null)} />
     </>
   );
 }
+
 
 /* ================= Create Post — 2 steps with multi-media ================= */
 function newMedia(type: "image" | "video", i: number, url?: string): MediaItem {
