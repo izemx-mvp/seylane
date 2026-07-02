@@ -62,7 +62,10 @@ function FAQTab() {
   const [edit, setEdit] = useState<Faq | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState<{ q: string; a: string; category: Faq["category"] }>({ q: "", a: "", category: "Général" });
+  const [page, setPage] = useState(1); const [pageSize, setPageSize] = useState(10);
   const filtered = state.faqs.filter((f) => `${f.q} ${f.a}`.toLowerCase().includes(q.toLowerCase()));
+  const { slice, pageCount } = usePagination(filtered, pageSize, page);
+
 
   const openEdit = (f: Faq) => { setEdit(f); setForm({ q: f.q, a: f.a, category: f.category }); };
   const openNew = () => { setShowNew(true); setForm({ q: "", a: "", category: "Général" }); };
