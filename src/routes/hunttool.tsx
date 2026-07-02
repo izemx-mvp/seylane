@@ -12,9 +12,11 @@ import { Slider } from "@/components/ui/slider";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Search, Sparkles, Info, Check, Clock, Repeat, Mail, Linkedin, MessageCircle } from "lucide-react";
+import { Search, Sparkles, Info, Check, Clock, Repeat, Mail, Linkedin, MessageCircle, UserCog, Send, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Campaign, CampaignContact, HuntConfig } from "@/lib/mock-data";
+import { PaginationBar, usePagination } from "@/components/pagination-bar";
+import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/hunttool")({
   head: () => ({ meta: [{ title: "Agent IA Relance HuntTool — Seylane" }] }),
