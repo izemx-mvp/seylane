@@ -128,15 +128,28 @@ export type CampaignContact = {
 };
 
 export type Faq = { id: string; q: string; a: string; category: "Entreprises" | "Candidats" | "Général"; status: "Actif" | "Brouillon" };
-export type DocFile = { id: string; name: string; category: string; date: string; size: string };
+export type DocFile = { id: string; name: string; category: string; date: string; size: string; dataUrl?: string };
 export type Contact = { id: string; department: string; name: string; role: string; phone: string; email: string; whatsapp: string };
+export type ServiceFiche = { id: string; brand: string; tag: string; description: string; benefits: string[] };
 
 export type RelanceDay = { day: string; enabled: boolean; from: string; to: string };
 export type HuntConfig = {
   maxRelances: number;
   delayDays: number;
+  waitDaysAfterOffer: number;
   channels: ("Email" | "LinkedIn" | "WhatsApp")[];
   days: RelanceDay[];
+};
+
+export type InterfaceKey = "community-manager" | "users" | "prospection" | "sourcing" | "hunttool" | "knowledge";
+export type Permission = { read: boolean; add: boolean; update: boolean; delete: boolean };
+export type UserAccount = {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "collab";
+  permissions: Record<InterfaceKey, Permission>;
+  createdAt: string;
 };
 
 export type AppNotification = {
