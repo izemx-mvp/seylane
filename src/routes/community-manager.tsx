@@ -305,9 +305,11 @@ function IdeasTab() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {list.map((idea) => <IdeaCard key={idea.id} idea={idea} onOpen={() => setDetail(idea)} />)}
+        {list.slice((page - 1) * pageSize, page * pageSize).map((idea) => <IdeaCard key={idea.id} idea={idea} onOpen={() => setDetail(idea)} />)}
       </div>
       {list.length === 0 && <div className="text-center text-muted-foreground text-sm py-16 border rounded-xl bg-muted/20">Aucune idée. Créez un post ou générez des idées.</div>}
+      <PaginationBar page={page} pageCount={Math.max(1, Math.ceil(list.length / pageSize))} onPage={setPage} pageSize={pageSize} onPageSize={setPageSize} total={list.length} />
+
 
       <IdeaSheet idea={detail} onClose={() => setDetail(null)} />
     </>
