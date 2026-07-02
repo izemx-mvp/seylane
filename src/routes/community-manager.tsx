@@ -265,10 +265,13 @@ function IdeasTab() {
   };
 
   const list = state.ideas.filter((i) => {
+    // Published & scheduled posts move to the Calendar view and disappear from ideas
+    if (i.status === "published" || i.status === "scheduled") return false;
     if (fStatus !== "all" && i.status !== fStatus) return false;
     if (q && !`${i.title} ${i.caption}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   });
+
 
   return (
     <>
