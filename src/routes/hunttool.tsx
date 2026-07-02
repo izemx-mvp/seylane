@@ -67,6 +67,9 @@ function ContactsTab() {
   const [fChannel, setFChannel] = useState<string>("all");
   const [fCampaign, setFCampaign] = useState<string>("all");
   const [selected, setSelected] = useState<Row | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [chatMsg, setChatMsg] = useState("");
 
   const rows: Row[] = useMemo(() => {
     const all: Row[] = state.campaigns.flatMap((cm) => cm.contacts.map((c) => ({ contact: c, campaign: cm })));
