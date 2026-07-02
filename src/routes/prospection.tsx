@@ -78,7 +78,7 @@ function ProspectionPage() {
   const SortIcon = ({ k }: { k: SortKey }) => sort.key !== k ? <ArrowUpDown className="h-3 w-3 opacity-40" /> : sort.dir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />;
 
   return (
-    <AppShell title="Prospection" subtitle={`${state.prospects.length} prospects entrants — site web, Instagram, LinkedIn`}>
+    <AppShell title="Agent IA Prospection" subtitle={`${state.prospects.length} prospects entrants — site web, Instagram, LinkedIn`}>
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="relative flex-1 min-w-[240px]">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
