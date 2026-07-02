@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Idea, Platform, MediaItem } from "@/lib/mock-data";
+import { PaginationBar } from "@/components/pagination-bar";
 
 export const Route = createFileRoute("/community-manager")({
   head: () => ({ meta: [{ title: "AI Community Manager — Seylane" }] }),
