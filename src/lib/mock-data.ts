@@ -522,6 +522,7 @@ export function seedData(): AppState {
   const huntConfig: HuntConfig = {
     maxRelances: 3,
     delayDays: 3,
+    waitDaysAfterOffer: 5,
     channels: ["LinkedIn", "Email", "WhatsApp"],
     days: [
       { day: "Lundi", enabled: true, from: "09:00", to: "18:00" },
@@ -533,6 +534,32 @@ export function seedData(): AppState {
       { day: "Dimanche", enabled: false, from: "10:00", to: "13:00" },
     ],
   };
+
+  const serviceFiches: ServiceFiche[] = [
+    { id: "sf-1", brand: "Seylane Executive", tag: "Chasse de tête & Management de transition",
+      description: "Cadres dirigeants et managers confirmés. Approche discrète, méthodique, résultats mesurables.",
+      benefits: ["Cartographie précise du marché", "Approche directe et confidentielle", "Short-list qualitative", "Accompagnement jusqu'à l'intégration"] },
+    { id: "sf-2", brand: "Seylane Staffing", tag: "Recrutement volumique & profils opérationnels",
+      description: "Techniciens, agents de maîtrise, cadres intermédiaires sur l'industrie, l'aéronautique, l'automobile et l'énergie.",
+      benefits: ["Campagnes 20 à 200+ postes", "Sourcing multi-canal", "Assessment centers", "Reporting hebdomadaire"] },
+    { id: "sf-3", brand: "Seylane Advisory", tag: "Conseil RH & performance",
+      description: "Talent Management, Outplacement, Formation, Salary Benchmarking, Team Building, Bilan de compétences.",
+      benefits: ["Diagnostic RH sur-mesure", "Benchmarks Maroc & Afrique", "Accompagnement transformation", "Coaching confidentiel"] },
+  ];
+
+  const fullPerm: Permission = { read: true, add: true, update: true, delete: true };
+  const readOnly: Permission = { read: true, add: false, update: false, delete: false };
+  const IK: InterfaceKey[] = ["community-manager", "users", "prospection", "sourcing", "hunttool", "knowledge"];
+  const allFull = Object.fromEntries(IK.map((k) => [k, { ...fullPerm }])) as Record<InterfaceKey, Permission>;
+  const collabPerms = Object.fromEntries(IK.map((k) => [k, k === "users" ? { read: false, add: false, update: false, delete: false } : { ...readOnly, update: true, add: true }])) as Record<InterfaceKey, Permission>;
+
+  const users: UserAccount[] = [
+    { id: "u-1", name: "Nabila Zerouali", email: "nabila@seylane.com", role: "admin", permissions: allFull, createdAt: new Date(Date.now() - 60 * 86400000).toISOString() },
+    { id: "u-2", name: "Rachid El Amrani", email: "rachid@seylane.com", role: "collab", permissions: collabPerms, createdAt: new Date(Date.now() - 30 * 86400000).toISOString() },
+    { id: "u-3", name: "Sanaa Berrada", email: "sanaa@seylane.com", role: "collab", permissions: { ...collabPerms, hunttool: fullPerm }, createdAt: new Date(Date.now() - 12 * 86400000).toISOString() },
+  ];
+
+
 
   const notifications: AppNotification[] = [
     { id: "n-1", kind: "hunttool", title: "Nouvelle réponse — Intéressé", body: "Younes El Amrani a répondu positivement à la campagne Directeur Industriel.", at: new Date(Date.now() - 12 * 60000).toISOString(), read: false },
