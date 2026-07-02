@@ -771,7 +771,7 @@ function CreatePostButton() {
               <Label className="text-xs">Aperçu des médias (réordonnez pour l'affichage final)</Label>
               <div className="flex gap-2 overflow-x-auto mt-2 pb-2">
                 {media.map((m, idx) => (
-                  <div key={m.id} className="relative w-40 shrink-0">
+                  <div key={m.id} {...dragProps(idx)} className="relative w-40 shrink-0 cursor-move">
                     <img src={m.url} alt="" className="w-40 h-28 object-cover rounded-lg" />
                     <Badge className="absolute top-1 left-1 bg-black/70 text-white text-[10px] gap-1">
                       {m.type === "video" ? <><Video className="h-2.5 w-2.5" /> {m.durationSec}s</> : <ImageIcon className="h-2.5 w-2.5" />}#{idx + 1}
