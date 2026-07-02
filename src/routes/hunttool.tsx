@@ -40,7 +40,7 @@ function classifStyle(c: CampaignContact["classification"]) {
 function HuntTool() {
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("contacts");
   return (
-    <AppShell title="HuntTool CRM" subtitle="Messagerie automatique multi-canal — Email · LinkedIn · WhatsApp">
+    <AppShell title="Agent IA Relance HuntTool" subtitle="Messagerie automatique multi-canal — Email · LinkedIn · WhatsApp">
       <div className="flex justify-center mb-6">
         <div className="inline-flex bg-muted/60 p-1 rounded-full border border-border/60">
           {TABS.map((t) => (
