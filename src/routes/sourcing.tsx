@@ -150,6 +150,7 @@ function SearchDetail({ search, onBack, onOpenCandidate, onPushHunt, candidateSh
   const [q, setQ] = useState("");
   const [minScore, setMinScore] = useState(0);
   const [sort, setSort] = useState<"score" | "exp">("score");
+  const [page, setPage] = useState(1); const [pageSize, setPageSize] = useState(10);
 
   const list = useMemo(() => {
     return [...search.candidates]
