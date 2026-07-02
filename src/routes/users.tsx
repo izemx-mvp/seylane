@@ -151,16 +151,16 @@ function UserDialog({ open, editing, isNew, onClose, onSave }: {
   const [role, setRole] = useState<"admin" | "collab">("collab");
   const [perms, setPerms] = useState<Record<InterfaceKey, Permission>>(emptyPerms());
 
-  // Sync when editing target changes
-  useState(() => {
-    if (editing) { setName(editing.name); setEmail(editing.email); setRole(editing.role); setPerms(editing.permissions ?? emptyPerms()); }
-    return 0;
-  });
+  useEffect(() => {
+    if (!open) return;
+    if (editing && !isNew) {
+      setName(editing.name); setEmail(editing.email); setRole(editing.role);
+      setPerms(editing.permissions ?? emptyPerms());
+    } else if (isNew) {
+      setName(""); setEmail(""); setRole("collab"); setPerms(emptyPerms());
+    }
+  }, [open, editing, isNew]);
 
-  // effect-like: reset on open change
-  if (open && editing && name !== editing.name && !isNew) {
-    // no-op: kept simple; user can retype
-  }
 
   const togglePerm = (k: InterfaceKey, act: keyof Permission) => {
     setPerms((cur) => {
