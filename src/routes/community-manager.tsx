@@ -641,6 +641,17 @@ function CreatePostButton() {
     [next[idx], next[j]] = [next[j], next[idx]];
     return next;
   });
+  const moveTo = (from: number, to: number) => setMedia((cur) => {
+    if (from === to || from < 0 || to < 0 || from >= cur.length || to >= cur.length) return cur;
+    const next = [...cur]; const [it] = next.splice(from, 1); next.splice(to, 0, it); return next;
+  });
+  const dragProps = (idx: number) => ({
+    draggable: true,
+    onDragStart: (e: React.DragEvent) => { e.dataTransfer.setData("text/plain", String(idx)); e.dataTransfer.effectAllowed = "move"; },
+    onDragOver: (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; },
+    onDrop: (e: React.DragEvent) => { e.preventDefault(); const from = parseInt(e.dataTransfer.getData("text/plain"), 10); if (!Number.isNaN(from)) moveTo(from, idx); },
+  });
+
   const upload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (!f) return;
     const url = URL.createObjectURL(f);
