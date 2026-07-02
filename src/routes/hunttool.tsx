@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import type { Campaign, CampaignContact, HuntConfig } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/hunttool")({
-  head: () => ({ meta: [{ title: "HuntTool CRM — Seylane" }] }),
+  head: () => ({ meta: [{ title: "Agent IA Relance HuntTool — Seylane" }] }),
   component: HuntTool,
 });
 
