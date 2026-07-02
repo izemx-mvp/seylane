@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UsersRouteImport } from './routes/users'
 import { Route as SourcingRouteImport } from './routes/sourcing'
 import { Route as ProspectionRouteImport } from './routes/prospection'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
@@ -16,6 +17,11 @@ import { Route as HunttoolRouteImport } from './routes/hunttool'
 import { Route as CommunityManagerRouteImport } from './routes/community-manager'
 import { Route as IndexRouteImport } from './routes/index'
 
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SourcingRoute = SourcingRouteImport.update({
   id: '/sourcing',
   path: '/sourcing',
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/knowledge': typeof KnowledgeRoute
   '/prospection': typeof ProspectionRoute
   '/sourcing': typeof SourcingRoute
+  '/users': typeof UsersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/knowledge': typeof KnowledgeRoute
   '/prospection': typeof ProspectionRoute
   '/sourcing': typeof SourcingRoute
+  '/users': typeof UsersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +79,7 @@ export interface FileRoutesById {
   '/knowledge': typeof KnowledgeRoute
   '/prospection': typeof ProspectionRoute
   '/sourcing': typeof SourcingRoute
+  '/users': typeof UsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +90,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/prospection'
     | '/sourcing'
+    | '/users'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/prospection'
     | '/sourcing'
+    | '/users'
   id:
     | '__root__'
     | '/'
@@ -97,6 +108,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/prospection'
     | '/sourcing'
+    | '/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,10 +118,18 @@ export interface RootRouteChildren {
   KnowledgeRoute: typeof KnowledgeRoute
   ProspectionRoute: typeof ProspectionRoute
   SourcingRoute: typeof SourcingRoute
+  UsersRoute: typeof UsersRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sourcing': {
       id: '/sourcing'
       path: '/sourcing'
@@ -162,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   KnowledgeRoute: KnowledgeRoute,
   ProspectionRoute: ProspectionRoute,
   SourcingRoute: SourcingRoute,
+  UsersRoute: UsersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
