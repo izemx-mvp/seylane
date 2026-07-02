@@ -81,6 +81,10 @@ function ProspectionPage() {
   const toggleSort = (k: SortKey) => setSort((s) => s.key === k ? { key: k, dir: s.dir === "asc" ? "desc" : "asc" } : { key: k, dir: "desc" });
   const SortIcon = ({ k }: { k: SortKey }) => sort.key !== k ? <ArrowUpDown className="h-3 w-3 opacity-40" /> : sort.dir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />;
 
+  const { slice: pageSlice, pageCount } = usePagination(filtered, pageSize, page);
+
+
+
   return (
     <AppShell title="Agent IA Prospection" subtitle={`${state.prospects.length} prospects entrants — site web, Instagram, LinkedIn`}>
       <div className="flex flex-wrap items-center gap-2 mb-4">
