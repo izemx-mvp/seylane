@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Search, Send, Edit3, Trash2, StickyNote, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Prospect } from "@/lib/mock-data";
+import { PaginationBar, usePagination } from "@/components/pagination-bar";
 
 export const Route = createFileRoute("/prospection")({
   head: () => ({ meta: [{ title: "Agent IA Prospection — Seylane" }] }),
