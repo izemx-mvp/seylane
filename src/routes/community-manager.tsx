@@ -197,7 +197,42 @@ function ConfigTab() {
   );
 }
 
+function ServicesConfigCard() {
+  const { state, set } = useStore();
+  const services = state.cmConfig.services ?? [];
+  const [val, setVal] = useState("");
+  const add = () => {
+    const v = val.trim(); if (!v) return;
+    set("cmConfig", { ...state.cmConfig, services: [...services, v] });
+    setVal(""); toast.success("Service ajouté");
+  };
+  const remove = (s: string) => set("cmConfig", { ...state.cmConfig, services: services.filter((x) => x !== s) });
+  return (
+    <Card className="soft-shadow">
+      <CardContent className="p-6">
+        <h3 className="font-display text-lg tracking-tight mb-1">Services de l'entreprise</h3>
+        <p className="text-xs text-muted-foreground mb-4">Utilisés par l'IA pour cibler les publications sur vos offres réelles.</p>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {services.map((s) => (
+            <Badge key={s} variant="secondary" className="gap-2 py-1.5 pl-3 pr-2 text-xs">
+              {s}
+              <button onClick={() => remove(s)} className="hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+            </Badge>
+          ))}
+          {services.length === 0 && <span className="text-xs text-muted-foreground">Aucun service défini.</span>}
+        </div>
+        <div className="flex gap-2">
+          <Input placeholder="Ex : Chasse de tête, Formation, Outplacement…" value={val} onChange={(e) => setVal(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") add(); }} />
+          <Button variant="outline" onClick={add}>Ajouter</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 /* -------- Ideas -------- */
+
 function IdeasTab() {
   const { state, set } = useStore();
   const [detail, setDetail] = useState<Idea | null>(null);
