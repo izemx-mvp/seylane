@@ -396,7 +396,7 @@ function IdeaSheet({ idea, onClose }: { idea: Idea | null; onClose: () => void }
 
   return (
     <Sheet open={!!idea} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="w-full sm:w-[92vw] sm:max-w-[1100px] overflow-y-auto">
+      <SheetContent className="w-full sm:w-[560px] sm:max-w-none overflow-y-auto">
         <SheetHeader><SheetTitle className="font-display tracking-tight">Modifier le contenu</SheetTitle></SheetHeader>
         <div className="mt-5 space-y-4">
           <div className="relative rounded-xl overflow-hidden aspect-video bg-muted">

@@ -260,7 +260,7 @@ function SearchDetail({ search, onBack, onOpenCandidate, onPushHunt, candidateSh
 function CandidateSheet({ detail, search, onClose, onPush }: { detail: Candidate | null; search: SourcingSearch; onClose: () => void; onPush: (c: Candidate) => void }) {
   return (
     <Sheet open={!!detail} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="w-full sm:w-[92vw] sm:max-w-[1100px] overflow-y-auto">
+      <SheetContent className="w-full sm:w-[560px] sm:max-w-none overflow-y-auto">
         {detail && (
           <>
             <SheetHeader><SheetTitle className="font-display tracking-tight">Profil candidat détaillé</SheetTitle></SheetHeader>
