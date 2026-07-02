@@ -210,13 +210,16 @@
   animation: floaty 6s ease-in-out infinite;
 }
 
-/* Ensure dialogs/sheets scroll cleanly instead of cutting off */
-[data-slot="dialog-content"], [role="dialog"] {
+/* Ensure dialogs scroll cleanly instead of cutting off (do not constrain sheets) */
+[data-slot="dialog-content"] {
   max-height: 92vh;
 }
-[data-slot="dialog-content"] > *,
-[role="dialog"] > * {
+[data-slot="dialog-content"] > * {
   min-height: 0;
+}
+[data-slot="sheet-content"] {
+  height: 100vh !important;
+  max-height: 100vh;
 }
 
 /* Global dialog polish — rounded, subtle gradient border, cyan top-glow */
