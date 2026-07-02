@@ -241,6 +241,7 @@ function IdeasTab() {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [fStatus, setFStatus] = useState("all");
+  const [page, setPage] = useState(1); const [pageSize, setPageSize] = useState(9);
 
   const generate = () => {
     setGen(true);
