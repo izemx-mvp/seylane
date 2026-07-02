@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useStore } from "@/lib/store";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,12 +17,14 @@ import {
 import { toast } from "sonner";
 import { Plus, Search, Trash2, Edit3, Copy, Upload, Download, FileText, Phone, Mail, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Faq } from "@/lib/mock-data";
+import type { Faq, ServiceFiche, DocFile, Contact } from "@/lib/mock-data";
+import { PaginationBar, usePagination } from "@/components/pagination-bar";
 
 export const Route = createFileRoute("/knowledge")({
   head: () => ({ meta: [{ title: "Base de Connaissances — Seylane" }] }),
   component: Knowledge,
 });
+
 
 const TABS = [
   { id: "faq", label: "FAQ" },
