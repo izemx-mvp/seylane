@@ -174,12 +174,33 @@
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(42rem 42rem at 12% -8%, color-mix(in oklab, var(--color-gold) 22%, transparent), transparent 60%),
-    radial-gradient(38rem 38rem at 105% 4%, color-mix(in oklab, var(--color-primary) 16%, transparent), transparent 62%),
-    radial-gradient(30rem 30rem at 88% 108%, color-mix(in oklab, var(--color-gold) 14%, transparent), transparent 60%);
-  opacity: 0.7;
+    radial-gradient(48rem 48rem at 8% -10%, color-mix(in oklab, var(--color-gold) 26%, transparent), transparent 60%),
+    radial-gradient(42rem 42rem at 110% 8%, color-mix(in oklab, var(--color-primary) 22%, transparent), transparent 62%),
+    radial-gradient(34rem 34rem at 88% 112%, color-mix(in oklab, var(--color-gold) 18%, transparent), transparent 60%),
+    radial-gradient(28rem 28rem at 12% 96%, color-mix(in oklab, var(--color-primary) 14%, transparent), transparent 62%);
+  opacity: 0.75;
+  animation: auroraShift 22s ease-in-out infinite alternate;
 }
-.dark .app-aurora { opacity: 0.4; }
+.dark .app-aurora { opacity: 0.45; }
+
+.app-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-border) 40%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-border) 40%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 20%, black 30%, transparent 75%);
+  opacity: 0.22;
+}
+.dark .app-grid { opacity: 0.12; }
+
+@keyframes auroraShift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(-2%, 1%, 0) scale(1.05); }
+}
 
 @keyframes floaty {
   0%, 100% { transform: translateY(0); }
@@ -188,4 +209,19 @@
 @utility float-soft {
   animation: floaty 6s ease-in-out infinite;
 }
+
+/* Ensure dialogs/sheets scroll cleanly instead of cutting off */
+[data-slot="dialog-content"], [role="dialog"] {
+  max-height: 90vh;
+}
+[data-slot="dialog-content"] > *,
+[role="dialog"] > * {
+  min-height: 0;
+}
+
+/* Nicer scrollbar in dialogs and panels */
+.scroll-fade::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-fade::-webkit-scrollbar-thumb { background: color-mix(in oklab, var(--color-border) 60%, transparent); border-radius: 8px; }
+.scroll-fade::-webkit-scrollbar-track { background: transparent; }
+
 
