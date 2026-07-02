@@ -125,6 +125,8 @@ export type CampaignContact = {
   classification: "Intéressé" | "Refusé" | "Ambigu" | "En attente";
   lastAt: string;
   rawReply?: string;
+  assignedHumanId?: string;
+  humanMessages?: { at: string; from: "human" | "client"; text: string }[];
 };
 
 export type Faq = { id: string; q: string; a: string; category: "Entreprises" | "Candidats" | "Général"; status: "Actif" | "Brouillon" };
