@@ -116,38 +116,52 @@ function ProspectionPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((p) => {
-                  const sc = scorePill(p.score);
+                {(() => {
+                  const { slice, pageCount } = usePagination(filtered, pageSize, page);
+                  const rows = slice.map((p) => {
+                    const sc = scorePill(p.score);
+                    return (
+                      <tr key={p.id} onClick={() => setDetail(p)}
+                        className="border-t hover:bg-muted/30 cursor-pointer transition-colors">
+                        <td className="p-3">
+                          <div className="font-medium">{p.firstName} {p.lastName}</div>
+                          <div className="text-xs text-muted-foreground truncate max-w-[240px]">{p.message}</div>
+                        </td>
+                        <td className="p-3"><Badge variant="outline">{p.type}</Badge></td>
+                        <td className="p-3 text-muted-foreground">{p.company || "—"}</td>
+                        <td className="p-3">{p.source}</td>
+                        <td className="p-3">{p.brand}</td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-xs font-semibold text-primary">{p.score}</div>
+                            <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full", sc.cls)}>{sc.label}</span>
+                          </div>
+                        </td>
+                        <td className="p-3"><Badge variant="secondary">{p.status}</Badge></td>
+                        <td className="p-3 text-xs text-muted-foreground">{new Date(p.receivedAt).toLocaleDateString("fr-FR")}</td>
+                      </tr>
+                    );
+                  });
+                  (window as unknown as { __prospPage?: number }).__prospPage = pageCount;
                   return (
-                    <tr key={p.id} onClick={() => setDetail(p)}
-                      className="border-t hover:bg-muted/30 cursor-pointer transition-colors">
-                      <td className="p-3">
-                        <div className="font-medium">{p.firstName} {p.lastName}</div>
-                        <div className="text-xs text-muted-foreground truncate max-w-[240px]">{p.message}</div>
-                      </td>
-                      <td className="p-3"><Badge variant="outline">{p.type}</Badge></td>
-                      <td className="p-3 text-muted-foreground">{p.company || "—"}</td>
-                      <td className="p-3">{p.source}</td>
-                      <td className="p-3">{p.brand}</td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-xs font-semibold text-primary">{p.score}</div>
-                          <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full", sc.cls)}>{sc.label}</span>
-                        </div>
-                      </td>
-                      <td className="p-3"><Badge variant="secondary">{p.status}</Badge></td>
-                      <td className="p-3 text-xs text-muted-foreground">{new Date(p.receivedAt).toLocaleDateString("fr-FR")}</td>
-                    </tr>
+                    <>
+                      {rows}
+                      {filtered.length === 0 && (
+                        <tr><td colSpan={8} className="p-10 text-center text-muted-foreground text-sm">Aucun prospect ne correspond à ces filtres.</td></tr>
+                      )}
+                    </>
                   );
-                })}
-                {filtered.length === 0 && (
-                  <tr><td colSpan={8} className="p-10 text-center text-muted-foreground text-sm">Aucun prospect ne correspond à ces filtres.</td></tr>
-                )}
+                })()}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
+      <PaginationBar
+        page={page} pageCount={Math.max(1, Math.ceil(filtered.length / pageSize))}
+        onPage={setPage} pageSize={pageSize} onPageSize={setPageSize} total={filtered.length}
+      />
+
 
       <Sheet open={!!detail} onOpenChange={(v) => !v && setDetail(null)}>
         <SheetContent className="w-[560px] sm:max-w-none overflow-y-auto">
