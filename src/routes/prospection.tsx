@@ -157,7 +157,7 @@ function ProspectionPage() {
 
 
       <Sheet open={!!detail} onOpenChange={(v) => !v && setDetail(null)}>
-        <SheetContent className="w-[560px] sm:max-w-none overflow-y-auto">
+        <SheetContent className="w-full sm:w-[92vw] sm:max-w-[1100px] overflow-y-auto">
           {detail && (() => {
             const sc = scorePill(detail.score);
             return (

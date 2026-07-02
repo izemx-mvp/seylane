@@ -160,7 +160,7 @@ function ContactsTab() {
 
 
       <Sheet open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
-        <SheetContent className="w-full sm:w-[520px] sm:max-w-none overflow-y-auto">
+        <SheetContent className="w-full sm:w-[92vw] sm:max-w-[1100px] overflow-y-auto">
           {selected && (
             <>
               <SheetHeader><SheetTitle className="font-display tracking-tight">{selected.contact.name}</SheetTitle></SheetHeader>
