@@ -2,6 +2,15 @@ export type Platform = "linkedin" | "instagram" | "website";
 export type PostFormat = "image" | "video";
 export type Brand = "Executive" | "Staffing" | "Advisory";
 
+export type MediaItem = {
+  id: string;
+  type: "image" | "video";
+  url: string;
+  description: string;
+  reference: string;
+  durationSec?: number;
+};
+
 export type Idea = {
   id: string;
   title: string;
@@ -12,6 +21,7 @@ export type Idea = {
   suggestedAt: string;
   score: number;
   media: string;
+  mediaItems?: MediaItem[];
   status: "draft" | "scheduled" | "published";
   scheduledFor?: string;
 };
@@ -35,6 +45,8 @@ export type Prospect = {
   notes: { at: string; text: string }[];
 };
 
+export type ScoringCriterion = { id: string; label: string; weight: number };
+
 export type SourcingSearch = {
   id: string;
   title: string;
@@ -45,15 +57,20 @@ export type SourcingSearch = {
   sector: string;
   seniority: string;
   location: string;
+  countries: string[];
+  cities: string[];
   skills: string[];
   languages: string[];
   contract: string;
   salary: string;
+  scoring: ScoringCriterion[];
   sources: { linkedin: boolean; web: boolean; network: boolean };
   createdAt: string;
   status: "En cours" | "Short-list" | "Placé" | "Clôturée";
   candidates: Candidate[];
 };
+
+export type CandidateExperience = { company: string; role: string; period: string; description: string };
 
 export type Candidate = {
   id: string;
@@ -61,15 +78,27 @@ export type Candidate = {
   currentRole: string;
   currentCompany: string;
   location: string;
+  country: string;
+  email: string;
+  phone: string;
+  linkedinUrl: string;
   matchScore: number;
-  breakdown: { label: string; value: number }[];
+  breakdown: { label: string; value: number; weight: number }[];
   availability: "En poste - non en recherche" | "Ouvert aux opportunités" | "En recherche active";
+  noticePeriod: string;
+  currentSalary: string;
+  expectedSalary: string;
+  education: string[];
+  certifications: string[];
+  timeline: CandidateExperience[];
   source: "LinkedIn" | "Web";
   avatar: string;
   poolStatus: "Nouveau" | "Approché" | "En échange" | "Vivier qualifié" | "Non pertinent";
   skills: string[];
   languages: string[];
   experience: string;
+  summary: string;
+  yearsExperience: number;
 };
 
 export type Campaign = {
@@ -102,6 +131,23 @@ export type Faq = { id: string; q: string; a: string; category: "Entreprises" | 
 export type DocFile = { id: string; name: string; category: string; date: string; size: string };
 export type Contact = { id: string; department: string; name: string; role: string; phone: string; email: string; whatsapp: string };
 
+export type RelanceDay = { day: string; enabled: boolean; from: string; to: string };
+export type HuntConfig = {
+  maxRelances: number;
+  delayDays: number;
+  channels: ("Email" | "LinkedIn" | "WhatsApp")[];
+  days: RelanceDay[];
+};
+
+export type AppNotification = {
+  id: string;
+  title: string;
+  body: string;
+  at: string;
+  read: boolean;
+  kind: "post" | "prospect" | "sourcing" | "hunttool";
+};
+
 export type AppState = {
   cmConfig: {
     logo: string;
@@ -112,6 +158,8 @@ export type AppState = {
       website: { enabled: boolean; tone: string; frequency: string };
     };
   };
+  huntConfig: HuntConfig;
+  notifications: AppNotification[];
   ideas: Idea[];
   prospects: Prospect[];
   searches: SourcingSearch[];
@@ -252,7 +300,15 @@ export function seedData(): AppState {
     };
   });
 
-  const makeCandidates = (n: number, seed: number): Candidate[] =>
+  const defaultScoring: ScoringCriterion[] = [
+    { id: "sk", label: "Adéquation compétences", weight: 35 },
+    { id: "sen", label: "Séniorité / expérience", weight: 25 },
+    { id: "sec", label: "Expérience secteur", weight: 20 },
+    { id: "loc", label: "Localisation / mobilité", weight: 10 },
+    { id: "dispo", label: "Disponibilité", weight: 10 },
+  ];
+
+  const makeCandidates = (n: number, seed: number, scoring: ScoringCriterion[] = defaultScoring): Candidate[] =>
     Array.from({ length: n }, (_, i) => {
       const names = [
         "Younes El Amrani", "Sophia Bennani", "Mehdi Kettani", "Rania El Khattabi", "Adil Benjelloun",
@@ -264,32 +320,73 @@ export function seedData(): AppState {
       ];
       const companies = ["Renault Group", "Managem", "OCP", "Boeing Casablanca", "Aptiv", "STMicroelectronics", "Cosumar", "Lesieur"];
       const locs = ["Casablanca", "Tanger", "Kénitra", "Rabat", "Marrakech"];
+      const countries = ["Maroc", "France", "Émirats Arabes Unis", "Canada"];
       const avails: Candidate["availability"][] = ["En poste - non en recherche", "Ouvert aux opportunités", "En recherche active"];
+      const notices = ["Immédiate", "1 mois", "2 mois", "3 mois"];
+      const schools = ["EMI Rabat", "EHTP Casablanca", "Centrale Paris", "ENSAM Meknès", "ESCA Casablanca", "HEC Paris"];
+      const certs = ["Lean Six Sigma Black Belt", "PMP", "ISO 9001 Lead Auditor", "SAP S/4HANA", "ITIL v4"];
       const idx = (seed * 7 + i * 3) % names.length;
-      const score = 42 + ((seed * 11 + i * 17) % 56);
+      const yrs = 8 + ((seed * 3 + i * 5) % 20);
+
+      const perc = scoring.map((_, k) => 45 + ((seed * 7 + i * 13 + k * 29) % 56));
+      const breakdown = scoring.map((cr, k) => ({ label: cr.label, weight: cr.weight, value: Math.round((perc[k] * cr.weight) / 100) }));
+      const matchScore = breakdown.reduce((a, b) => a + b.value, 0);
+
+      const role = roles[(idx + seed) % roles.length];
+      const company = companies[(idx + i) % companies.length];
+      const first = names[idx].split(" ")[0].toLowerCase();
+      const last = names[idx].split(" ").slice(1).join("").toLowerCase();
+
+      const timeline: CandidateExperience[] = [
+        { company, role, period: `2021 – aujourd'hui`, description: `Pilotage des opérations, amélioration continue et management d'équipes pluridisciplinaires.` },
+        { company: companies[(idx + i + 3) % companies.length], role: roles[(idx + i + 2) % roles.length], period: "2016 – 2021", description: "Déploiement de projets industriels et optimisation des KPIs de production." },
+        { company: companies[(idx + i + 5) % companies.length], role: roles[(idx + i + 4) % roles.length], period: "2012 – 2016", description: "Premières responsabilités opérationnelles et gestion de la performance." },
+      ];
+
       return {
         id: `c-${seed}-${i}`,
         name: names[idx],
-        currentRole: roles[(idx + seed) % roles.length],
-        currentCompany: companies[(idx + i) % companies.length],
+        currentRole: role,
+        currentCompany: company,
         location: locs[i % locs.length],
-        matchScore: score,
-        breakdown: [
-          { label: "Adéquation compétences", value: Math.min(35, Math.floor(score * 0.35)) },
-          { label: "Séniorité / expérience", value: Math.min(25, Math.floor(score * 0.25)) },
-          { label: "Secteur", value: Math.min(20, Math.floor(score * 0.2)) },
-          { label: "Localisation", value: Math.min(10, Math.floor(score * 0.1)) },
-          { label: "Disponibilité probable", value: Math.min(10, Math.floor(score * 0.1)) },
-        ],
+        country: countries[i % countries.length],
+        email: `${first}.${last}@mail.com`,
+        phone: `+212 6 ${String(20000000 + (seed * 131 + i * 977) % 79999999).slice(0, 8)}`,
+        linkedinUrl: `linkedin.com/in/${first}-${last}`,
+        matchScore,
+        breakdown,
         availability: avails[(i + seed) % 3],
+        noticePeriod: notices[(i + seed) % notices.length],
+        currentSalary: `${60 + ((i * 7) % 40)} 000 MAD/mois`,
+        expectedSalary: `${75 + ((i * 9) % 55)} 000 MAD/mois`,
+        education: [schools[(idx + i) % schools.length], schools[(idx + i + 2) % schools.length]],
+        certifications: certs.slice(0, 1 + (i % 3)),
+        timeline,
         source: i % 3 === 0 ? "Web" : "LinkedIn",
         avatar: avatars[(idx + i) % avatars.length],
         poolStatus: "Nouveau",
-        skills: ["Lean Management", "Six Sigma", "SAP", "Leadership", "Anglais"].slice(0, 3 + (i % 3)),
+        skills: ["Lean Management", "Six Sigma", "SAP", "Leadership", "Gestion de P&L", "Anglais courant"].slice(0, 4 + (i % 3)),
         languages: ["Français", "Anglais", i % 2 === 0 ? "Arabe" : "Espagnol"],
-        experience: `${12 + (i % 15)} ans d'expérience dans l'industrie, dernier poste ${roles[(idx + seed) % roles.length]} chez ${companies[(idx + i) % companies.length]}.`,
+        experience: `${yrs} ans d'expérience dans l'industrie, dernier poste ${role} chez ${company}.`,
+        summary: `${role} confirmé(e) avec ${yrs} ans d'expérience, reconnu(e) pour le pilotage de la performance industrielle et le management d'équipes. Profil ${avails[(i + seed) % 3].toLowerCase()}.`,
+        yearsExperience: yrs,
       };
     });
+
+  const scoringExec: ScoringCriterion[] = [
+    { id: "sk", label: "Adéquation compétences", weight: 40 },
+    { id: "sen", label: "Séniorité / leadership", weight: 30 },
+    { id: "sec", label: "Expérience secteur", weight: 15 },
+    { id: "loc", label: "Localisation / mobilité", weight: 10 },
+    { id: "dispo", label: "Disponibilité", weight: 5 },
+  ];
+  const scoringStaff: ScoringCriterion[] = [
+    { id: "sk", label: "Compétences techniques", weight: 45 },
+    { id: "sen", label: "Années d'expérience", weight: 20 },
+    { id: "sec", label: "Expérience secteur", weight: 15 },
+    { id: "loc", label: "Localisation", weight: 10 },
+    { id: "dispo", label: "Disponibilité", weight: 10 },
+  ];
 
   const searches: SourcingSearch[] = [
     {
@@ -297,27 +394,30 @@ export function seedData(): AppState {
       client: "Atlas Industries", poste: "Directeur Industriel Site Kénitra",
       jobDescription: "Pilotage d'un site industriel de 450 collaborateurs, transformation lean, P&L complet, reporting direct au DG Groupe.",
       brand: "Executive", sector: "Industries", seniority: "Cadre dirigeant",
-      location: "Casablanca", skills: ["Lean", "Leadership", "P&L"], languages: ["Français", "Anglais"], contract: "CDI",
-      salary: "1 200 000 – 1 800 000 MAD/an", sources: { linkedin: true, web: true, network: true },
-      createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), status: "Short-list", candidates: makeCandidates(10, 1),
+      location: "Casablanca", countries: ["Maroc", "France"], cities: ["Casablanca", "Kénitra", "Rabat"],
+      skills: ["Lean", "Leadership", "P&L"], languages: ["Français", "Anglais"], contract: "CDI",
+      salary: "1 200 000 – 1 800 000 MAD/an", scoring: scoringExec, sources: { linkedin: true, web: true, network: true },
+      createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), status: "Short-list", candidates: makeCandidates(10, 1, scoringExec),
     },
     {
       id: "s-2", title: "Responsable QSE — Tanger",
       client: "Boeing Casablanca", poste: "Head of Quality Aéronautique",
       jobDescription: "Déploiement du système qualité EN 9100 sur la ligne d'assemblage, audits fournisseurs, encadrement de 12 auditeurs.",
       brand: "Executive", sector: "Aéronautique", seniority: "Confirmé",
-      location: "Tanger", skills: ["ISO 9001", "EN 9100", "Audits"], languages: ["Français", "Anglais"], contract: "CDI",
-      salary: "450 000 – 650 000 MAD/an", sources: { linkedin: true, web: true, network: false },
-      createdAt: new Date(Date.now() - 6 * 86400000).toISOString(), status: "En cours", candidates: makeCandidates(9, 2),
+      location: "Tanger", countries: ["Maroc"], cities: ["Tanger", "Casablanca"],
+      skills: ["ISO 9001", "EN 9100", "Audits"], languages: ["Français", "Anglais"], contract: "CDI",
+      salary: "450 000 – 650 000 MAD/an", scoring: scoringExec, sources: { linkedin: true, web: true, network: false },
+      createdAt: new Date(Date.now() - 6 * 86400000).toISOString(), status: "En cours", candidates: makeCandidates(9, 2, scoringExec),
     },
     {
       id: "s-3", title: "Ingénieur Automatisme — Kénitra",
       client: "Renault Tanger Med", poste: "Ingénieur Automatisme Sr",
       jobDescription: "Programmation Siemens TIA Portal, mise en service robotique Fanuc, projet greenfield ligne de peinture.",
       brand: "Staffing", sector: "Automobile", seniority: "Confirmé",
-      location: "Kénitra", skills: ["Siemens TIA", "Robotique", "PLC"], languages: ["Français"], contract: "CDI",
-      salary: "300 000 – 480 000 MAD/an", sources: { linkedin: true, web: false, network: true },
-      createdAt: new Date(Date.now() - 10 * 86400000).toISOString(), status: "En cours", candidates: makeCandidates(12, 3),
+      location: "Kénitra", countries: ["Maroc"], cities: ["Kénitra", "Tanger"],
+      skills: ["Siemens TIA", "Robotique", "PLC"], languages: ["Français"], contract: "CDI",
+      salary: "300 000 – 480 000 MAD/an", scoring: scoringStaff, sources: { linkedin: true, web: false, network: true },
+      createdAt: new Date(Date.now() - 10 * 86400000).toISOString(), status: "En cours", candidates: makeCandidates(12, 3, scoringStaff),
     },
   ];
 
@@ -400,6 +500,28 @@ export function seedData(): AppState {
     { id: "ct-6", department: "Administratif", name: "Hind Sefrioui", role: "Office Manager", phone: "+212 5 20 29 07 49", email: "contact@seylane.com", whatsapp: "+212 6 61 78 90 12" },
   ];
 
+  const huntConfig: HuntConfig = {
+    maxRelances: 3,
+    delayDays: 3,
+    channels: ["LinkedIn", "Email", "WhatsApp"],
+    days: [
+      { day: "Lundi", enabled: true, from: "09:00", to: "18:00" },
+      { day: "Mardi", enabled: true, from: "09:00", to: "18:00" },
+      { day: "Mercredi", enabled: true, from: "09:00", to: "18:00" },
+      { day: "Jeudi", enabled: true, from: "09:00", to: "18:00" },
+      { day: "Vendredi", enabled: true, from: "09:00", to: "16:00" },
+      { day: "Samedi", enabled: false, from: "10:00", to: "13:00" },
+      { day: "Dimanche", enabled: false, from: "10:00", to: "13:00" },
+    ],
+  };
+
+  const notifications: AppNotification[] = [
+    { id: "n-1", kind: "hunttool", title: "Nouvelle réponse — Intéressé", body: "Younes El Amrani a répondu positivement à la campagne Directeur Industriel.", at: new Date(Date.now() - 12 * 60000).toISOString(), read: false },
+    { id: "n-2", kind: "post", title: "Post publié sur LinkedIn", body: "« Les métiers en tension dans l'industrie » a été publié avec succès.", at: new Date(Date.now() - 2 * 3600000).toISOString(), read: false },
+    { id: "n-3", kind: "prospect", title: "Nouveau prospect qualifié IA", body: "Karim Benali (Atlas Industries) a été qualifié automatiquement — score 82%.", at: new Date(Date.now() - 5 * 3600000).toISOString(), read: false },
+    { id: "n-4", kind: "sourcing", title: "Sourcing terminé", body: "10 candidats identifiés pour Directeur Industriel — Casablanca.", at: new Date(Date.now() - 26 * 3600000).toISOString(), read: true },
+  ];
+
   return {
     cmConfig: {
       logo: "https://www.seylane.com/_next/image?url=%2FLOGO%2520SEYLANE%2520-%2520BLANC_.png&w=384&q=75",
@@ -410,6 +532,8 @@ export function seedData(): AppState {
         website:   { enabled: true, tone: "Éditorial approfondi",     frequency: "Hebdomadaire" },
       },
     },
+    huntConfig,
+    notifications,
     ideas,
     prospects,
     searches,
