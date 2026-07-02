@@ -43,6 +43,9 @@ function ProspectionPage() {
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "receivedAt", dir: "desc" });
   const [detail, setDetail] = useState<Prospect | null>(null);
   const [note, setNote] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
 
   const filtered = useMemo(() => {
     const list = state.prospects.filter((p) => {
