@@ -11,31 +11,35 @@ type Ctx = {
 const StoreCtx = createContext<Ctx | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AppState>(() => {
-    if (typeof window === "undefined") return seedData();
-    try {
-      const raw = localStorage.getItem("seylane-state");
-      if (raw) return { ...seedData(), ...JSON.parse(raw) };
-    } catch {}
-    return seedData();
-  });
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") return "light";
-    return (localStorage.getItem("seylane-theme") as "light" | "dark") || "light";
-  });
+  // Always seed deterministically for SSR + first client render (avoids hydration
+  // mismatch from time-based mock data). localStorage is merged in after mount.
+  const [state, setState] = useState<AppState>(() => seedData());
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
+      const raw = localStorage.getItem("seylane-state");
+      if (raw) setState((prev) => ({ ...prev, ...JSON.parse(raw) }));
+    } catch { /* ignore */ }
+    const t = (localStorage.getItem("seylane-theme") as "light" | "dark") || "light";
+    setTheme(t);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
       localStorage.setItem("seylane-state", JSON.stringify(state));
-    } catch {}
-  }, [state]);
+    } catch { /* ignore */ }
+  }, [state, hydrated]);
 
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") root.classList.add("dark");
     else root.classList.remove("dark");
-    localStorage.setItem("seylane-theme", theme);
-  }, [theme]);
+    if (hydrated) localStorage.setItem("seylane-theme", theme);
+  }, [theme, hydrated]);
 
   const set: Ctx["set"] = (k, v) => {
     setState((prev) => ({
@@ -46,7 +50,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   return (
     <StoreCtx.Provider value={{ state, set, theme, toggleTheme: () => setTheme((t) => (t === "light" ? "dark" : "light")) }}>
-      {children}
+      {hydrated ? children : (
+        <div className="min-h-screen flex items-center justify-center bg-background" suppressHydrationWarning>
+          <div className="h-8 w-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
+        </div>
+      )}
     </StoreCtx.Provider>
   );
 }

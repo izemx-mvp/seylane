@@ -166,3 +166,26 @@
 @utility soft-shadow {
   box-shadow: 0 1px 2px oklch(0.24 0.08 260 / 0.04), 0 8px 24px -12px oklch(0.24 0.08 260 / 0.12);
 }
+
+/* Unique branded background — soft cyan/navy aurora behind every page */
+.app-aurora {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(42rem 42rem at 12% -8%, color-mix(in oklab, var(--color-gold) 22%, transparent), transparent 60%),
+    radial-gradient(38rem 38rem at 105% 4%, color-mix(in oklab, var(--color-primary) 16%, transparent), transparent 62%),
+    radial-gradient(30rem 30rem at 88% 108%, color-mix(in oklab, var(--color-gold) 14%, transparent), transparent 60%);
+  opacity: 0.7;
+}
+.dark .app-aurora { opacity: 0.4; }
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@utility float-soft {
+  animation: floaty 6s ease-in-out infinite;
+}
+
