@@ -730,7 +730,7 @@ function CreatePostButton() {
 
               <div className="space-y-3">
                 {media.map((m, idx) => (
-                  <div key={m.id} className="border rounded-lg p-3 bg-card flex gap-3">
+                  <div key={m.id} {...dragProps(idx)} className="border rounded-lg p-3 bg-card flex gap-3 cursor-move hover:border-primary/40 transition-colors">
                     <div className="relative w-28 shrink-0">
                       <img src={m.url} alt="" className="w-28 h-20 object-cover rounded-md" />
                       <Badge className="absolute top-1 left-1 bg-black/70 text-white text-[10px] px-1.5 py-0 gap-1">
