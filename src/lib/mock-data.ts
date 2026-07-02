@@ -572,6 +572,7 @@ export function seedData(): AppState {
     cmConfig: {
       logo: "https://www.seylane.com/_next/image?url=%2FLOGO%2520SEYLANE%2520-%2520BLANC_.png&w=384&q=75",
       objectives: ["Renforcer la notoriété de marque", "Générer des leads B2B qualifiés", "Attirer les meilleurs talents"],
+      services: ["Executive Search", "Staffing volumique", "Management de transition", "Advisory RH", "Outplacement", "Formation"],
       platformSettings: {
         linkedin:  { enabled: true, tone: "Expert & institutionnel", frequency: "3x semaine" },
         instagram: { enabled: true, tone: "Humain & inspirant",      frequency: "2x semaine" },
@@ -587,5 +588,9 @@ export function seedData(): AppState {
     faqs,
     documents,
     contacts,
+    serviceFiches,
+    users,
+    currentUserId: "u-1",
   };
 }
+
