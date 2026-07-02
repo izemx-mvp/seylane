@@ -90,6 +90,8 @@ function ContactsTab() {
   };
 
   const totalAuto = state.campaigns.filter((c) => c.origin === "auto").length;
+  const { slice: pageSlice, pageCount } = usePagination(rows, pageSize, page);
+
 
   return (
     <>
