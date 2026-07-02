@@ -289,8 +289,16 @@ function ConfigTab() {
               })}
             </div>
           </div>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <div className="flex items-center justify-between mb-2"><Label className="text-sm">Attente après envoi de l'offre</Label><span className="text-sm font-semibold">{cfg.waitDaysAfterOffer ?? 3} j</span></div>
+              <Slider value={[cfg.waitDaysAfterOffer ?? 3]} onValueChange={(v) => setCfg((c) => ({ ...c, waitDaysAfterOffer: v[0] }))} min={0} max={14} step={1} />
+              <p className="text-[11px] text-muted-foreground mt-1">Délai avant que l'IA n'entame la première relance après l'envoi de l'offre.</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
+
 
       <Card className="soft-shadow">
         <CardContent className="p-6 space-y-4">
