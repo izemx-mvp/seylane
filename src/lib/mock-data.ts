@@ -125,18 +125,33 @@ export type CampaignContact = {
   classification: "Intéressé" | "Refusé" | "Ambigu" | "En attente";
   lastAt: string;
   rawReply?: string;
+  assignedHumanId?: string;
+  humanMessages?: { at: string; from: "human" | "client"; text: string }[];
 };
 
 export type Faq = { id: string; q: string; a: string; category: "Entreprises" | "Candidats" | "Général"; status: "Actif" | "Brouillon" };
-export type DocFile = { id: string; name: string; category: string; date: string; size: string };
+export type DocFile = { id: string; name: string; category: string; date: string; size: string; dataUrl?: string };
 export type Contact = { id: string; department: string; name: string; role: string; phone: string; email: string; whatsapp: string };
+export type ServiceFiche = { id: string; brand: string; tag: string; description: string; benefits: string[] };
 
 export type RelanceDay = { day: string; enabled: boolean; from: string; to: string };
 export type HuntConfig = {
   maxRelances: number;
   delayDays: number;
+  waitDaysAfterOffer: number;
   channels: ("Email" | "LinkedIn" | "WhatsApp")[];
   days: RelanceDay[];
+};
+
+export type InterfaceKey = "community-manager" | "users" | "prospection" | "sourcing" | "hunttool" | "knowledge";
+export type Permission = { read: boolean; add: boolean; update: boolean; delete: boolean };
+export type UserAccount = {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "collab";
+  permissions: Record<InterfaceKey, Permission>;
+  createdAt: string;
 };
 
 export type AppNotification = {
@@ -152,6 +167,7 @@ export type AppState = {
   cmConfig: {
     logo: string;
     objectives: string[];
+    services: string[];
     platformSettings: {
       linkedin: { enabled: boolean; tone: string; frequency: string };
       instagram: { enabled: boolean; tone: string; frequency: string };
@@ -167,6 +183,9 @@ export type AppState = {
   faqs: Faq[];
   documents: DocFile[];
   contacts: Contact[];
+  serviceFiches: ServiceFiche[];
+  users: UserAccount[];
+  currentUserId: string;
 };
 
 const img = (seed: string) => `https://images.unsplash.com/photo-${seed}?auto=format&fit=crop&w=800&q=80`;
@@ -503,6 +522,7 @@ export function seedData(): AppState {
   const huntConfig: HuntConfig = {
     maxRelances: 3,
     delayDays: 3,
+    waitDaysAfterOffer: 5,
     channels: ["LinkedIn", "Email", "WhatsApp"],
     days: [
       { day: "Lundi", enabled: true, from: "09:00", to: "18:00" },
@@ -515,6 +535,32 @@ export function seedData(): AppState {
     ],
   };
 
+  const serviceFiches: ServiceFiche[] = [
+    { id: "sf-1", brand: "Seylane Executive", tag: "Chasse de tête & Management de transition",
+      description: "Cadres dirigeants et managers confirmés. Approche discrète, méthodique, résultats mesurables.",
+      benefits: ["Cartographie précise du marché", "Approche directe et confidentielle", "Short-list qualitative", "Accompagnement jusqu'à l'intégration"] },
+    { id: "sf-2", brand: "Seylane Staffing", tag: "Recrutement volumique & profils opérationnels",
+      description: "Techniciens, agents de maîtrise, cadres intermédiaires sur l'industrie, l'aéronautique, l'automobile et l'énergie.",
+      benefits: ["Campagnes 20 à 200+ postes", "Sourcing multi-canal", "Assessment centers", "Reporting hebdomadaire"] },
+    { id: "sf-3", brand: "Seylane Advisory", tag: "Conseil RH & performance",
+      description: "Talent Management, Outplacement, Formation, Salary Benchmarking, Team Building, Bilan de compétences.",
+      benefits: ["Diagnostic RH sur-mesure", "Benchmarks Maroc & Afrique", "Accompagnement transformation", "Coaching confidentiel"] },
+  ];
+
+  const fullPerm: Permission = { read: true, add: true, update: true, delete: true };
+  const readOnly: Permission = { read: true, add: false, update: false, delete: false };
+  const IK: InterfaceKey[] = ["community-manager", "users", "prospection", "sourcing", "hunttool", "knowledge"];
+  const allFull = Object.fromEntries(IK.map((k) => [k, { ...fullPerm }])) as Record<InterfaceKey, Permission>;
+  const collabPerms = Object.fromEntries(IK.map((k) => [k, k === "users" ? { read: false, add: false, update: false, delete: false } : { ...readOnly, update: true, add: true }])) as Record<InterfaceKey, Permission>;
+
+  const users: UserAccount[] = [
+    { id: "u-1", name: "Nabila Zerouali", email: "nabila@seylane.com", role: "admin", permissions: allFull, createdAt: new Date(Date.now() - 60 * 86400000).toISOString() },
+    { id: "u-2", name: "Rachid El Amrani", email: "rachid@seylane.com", role: "collab", permissions: collabPerms, createdAt: new Date(Date.now() - 30 * 86400000).toISOString() },
+    { id: "u-3", name: "Sanaa Berrada", email: "sanaa@seylane.com", role: "collab", permissions: { ...collabPerms, hunttool: fullPerm }, createdAt: new Date(Date.now() - 12 * 86400000).toISOString() },
+  ];
+
+
+
   const notifications: AppNotification[] = [
     { id: "n-1", kind: "hunttool", title: "Nouvelle réponse — Intéressé", body: "Younes El Amrani a répondu positivement à la campagne Directeur Industriel.", at: new Date(Date.now() - 12 * 60000).toISOString(), read: false },
     { id: "n-2", kind: "post", title: "Post publié sur LinkedIn", body: "« Les métiers en tension dans l'industrie » a été publié avec succès.", at: new Date(Date.now() - 2 * 3600000).toISOString(), read: false },
@@ -526,6 +572,7 @@ export function seedData(): AppState {
     cmConfig: {
       logo: "https://www.seylane.com/_next/image?url=%2FLOGO%2520SEYLANE%2520-%2520BLANC_.png&w=384&q=75",
       objectives: ["Renforcer la notoriété de marque", "Générer des leads B2B qualifiés", "Attirer les meilleurs talents"],
+      services: ["Executive Search", "Staffing volumique", "Management de transition", "Advisory RH", "Outplacement", "Formation"],
       platformSettings: {
         linkedin:  { enabled: true, tone: "Expert & institutionnel", frequency: "3x semaine" },
         instagram: { enabled: true, tone: "Humain & inspirant",      frequency: "2x semaine" },
@@ -541,5 +588,9 @@ export function seedData(): AppState {
     faqs,
     documents,
     contacts,
+    serviceFiches,
+    users,
+    currentUserId: "u-1",
   };
 }
+

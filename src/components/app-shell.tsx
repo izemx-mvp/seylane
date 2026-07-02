@@ -1,24 +1,26 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 import {
-  LayoutDashboard, Sparkles, Users, Search, Send, BookOpen, Sun, Moon, Bell, ChevronDown, Check,
+  LayoutDashboard, Sparkles, Users, Search, Send, BookOpen, Sun, Moon, Bell, ChevronDown, Check, ShieldCheck,
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import type { InterfaceKey } from "@/lib/mock-data";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 const SEYLANE_LOGO = "https://www.seylane.com/_next/image?url=%2FLOGO%2520SEYLANE%2520-%2520BLANC_.png&w=384&q=75";
 
-const nav = [
+const nav: { to: string; label: string; icon: typeof LayoutDashboard; key?: InterfaceKey }[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/community-manager", label: "AI Community Manager", icon: Sparkles },
-  { to: "/prospection", label: "Prospection", icon: Users },
-  { to: "/sourcing", label: "Agent IA de Sourcing", icon: Search },
-  { to: "/hunttool", label: "HuntTool CRM", icon: Send },
-  { to: "/knowledge", label: "Base de Connaissances", icon: BookOpen },
+  { to: "/users", label: "Gestion des utilisateurs", icon: ShieldCheck, key: "users" },
+  { to: "/community-manager", label: "AI Community Manager", icon: Sparkles, key: "community-manager" },
+  { to: "/prospection", label: "Agent IA Prospection", icon: Users, key: "prospection" },
+  { to: "/sourcing", label: "Agent IA de Sourcing", icon: Search, key: "sourcing" },
+  { to: "/hunttool", label: "Agent IA Relance HuntTool", icon: Send, key: "hunttool" },
+  { to: "/knowledge", label: "Base de Connaissances", icon: BookOpen, key: "knowledge" },
 ];
 
 function NotificationsMenu() {
@@ -34,17 +36,17 @@ function NotificationsMenu() {
         <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
           <Bell className="h-4 w-4" />
           {unread > 0 && (
-            <span className="absolute top-1.5 right-1.5 min-w-[15px] h-[15px] px-1 rounded-full bg-gold text-primary text-[9px] font-bold flex items-center justify-center">{unread}</span>
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-gold text-primary text-[9px] font-bold flex items-center justify-center animate-pulse">{unread}</span>
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[340px] p-0">
+      <DropdownMenuContent align="end" className="w-[360px] p-0">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <div className="text-sm font-semibold">Notifications</div>
           {unread > 0 && <button onClick={markAll} className="text-xs text-primary hover:underline flex items-center gap-1"><Check className="h-3 w-3" /> Tout marquer lu</button>}
         </div>
-        <div className="max-h-[380px] overflow-y-auto">
-          {notifs.length === 0 && <div className="px-4 py-8 text-center text-xs text-muted-foreground">Aucune notification.</div>}
+        <div className="max-h-[420px] overflow-y-auto">
+          {notifs.length === 0 && <div className="px-4 py-10 text-center text-xs text-muted-foreground">Aucune notification.</div>}
           {notifs.map((n) => (
             <button key={n.id} onClick={() => markOne(n.id)}
               className={cn("w-full text-left px-4 py-3 border-b last:border-0 hover:bg-muted/50 transition-colors flex gap-3", !n.read && "bg-primary/5")}>
@@ -64,22 +66,27 @@ function NotificationsMenu() {
 
 export function AppShell({ children, title, subtitle, actions }: { children: ReactNode; title: string; subtitle?: string; actions?: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { theme, toggleTheme } = useStore();
+  const { theme, toggleTheme, currentUser, can } = useStore();
+
+  const visibleNav = nav.filter((item) => !item.key || can(item.key, "read"));
 
   return (
     <div className="min-h-screen flex bg-background">
-      <aside className="w-64 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
-        <div className="px-6 pt-8 pb-6 border-b border-sidebar-border">
+      <aside className="w-72 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none opacity-40" style={{
+          backgroundImage: "radial-gradient(30rem 30rem at 50% -6%, color-mix(in oklab, var(--color-gold) 30%, transparent), transparent 60%)",
+        }} />
+        <div className="relative px-6 pt-9 pb-7 border-b border-sidebar-border">
           <img
             src={SEYLANE_LOGO}
             alt="Seylane"
-            className="h-16 w-auto object-contain select-none"
+            className="h-24 w-auto object-contain select-none drop-shadow-lg"
             draggable={false}
           />
-          <div className="text-[10px] uppercase tracking-[0.28em] text-sidebar-foreground/60 mt-3">AI Backoffice</div>
+          <div className="text-[10px] uppercase tracking-[0.32em] text-sidebar-foreground/70 mt-4">AI Backoffice</div>
         </div>
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {nav.map((item) => {
+        <nav className="relative flex-1 p-3 space-y-1 overflow-y-auto">
+          {visibleNav.map((item) => {
             const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
             const Icon = item.icon;
             return (
@@ -95,17 +102,19 @@ export function AppShell({ children, title, subtitle, actions }: { children: Rea
               >
                 <Icon className="h-4 w-4" />
                 <span>{item.label}</span>
-                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-gold" />}
+                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />}
               </Link>
             );
           })}
         </nav>
-        <div className="p-4 border-t border-sidebar-border text-xs text-sidebar-foreground/70">
+        <div className="relative p-4 border-t border-sidebar-border text-xs text-sidebar-foreground/70">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gold text-primary flex items-center justify-center text-xs font-semibold">NZ</div>
-            <div className="flex-1">
-              <div className="font-medium text-sidebar-foreground">Nabila Zerouali</div>
-              <div className="opacity-70">Admin · Seylane</div>
+            <div className="w-9 h-9 rounded-full gold-gradient text-primary flex items-center justify-center text-xs font-semibold">
+              {currentUser.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sidebar-foreground truncate">{currentUser.name}</div>
+              <div className="opacity-70 capitalize">{currentUser.role} · Seylane</div>
             </div>
             <ChevronDown className="h-3 w-3" />
           </div>
@@ -128,6 +137,7 @@ export function AppShell({ children, title, subtitle, actions }: { children: Rea
         </header>
         <main className="relative flex-1 overflow-y-auto p-8 animate-in fade-in duration-300">
           <div className="app-aurora" aria-hidden />
+          <div className="app-grid" aria-hidden />
           <div className="relative">{children}</div>
         </main>
       </div>

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
+import { PaginationBar } from "@/components/pagination-bar";
 import { useStore } from "@/lib/store";
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -150,6 +151,7 @@ function SearchDetail({ search, onBack, onOpenCandidate, onPushHunt, candidateSh
   const [q, setQ] = useState("");
   const [minScore, setMinScore] = useState(0);
   const [sort, setSort] = useState<"score" | "exp">("score");
+  const [page, setPage] = useState(1); const [pageSize, setPageSize] = useState(10);
 
   const list = useMemo(() => {
     return [...search.candidates]
@@ -225,7 +227,7 @@ function SearchDetail({ search, onBack, onOpenCandidate, onPushHunt, candidateSh
             <span className="ml-auto font-medium text-foreground">{list.length} candidat(s)</span>
           </div>
 
-          {list.map((c) => (
+          {list.slice((page - 1) * pageSize, page * pageSize).map((c) => (
             <Card key={c.id} className="soft-shadow hover-lift hover:shadow-lg cursor-pointer transition-all" onClick={() => onOpenCandidate(c)}>
               <CardContent className="p-4 flex items-center gap-4">
                 <img src={c.avatar} className="w-12 h-12 rounded-full object-cover ring-2 ring-border" alt="" />
@@ -246,6 +248,8 @@ function SearchDetail({ search, onBack, onOpenCandidate, onPushHunt, candidateSh
             </Card>
           ))}
           {list.length === 0 && <div className="text-center text-muted-foreground text-sm py-12 border rounded-xl bg-muted/20">Aucun candidat à ce niveau de filtre.</div>}
+          <PaginationBar page={page} pageCount={Math.max(1, Math.ceil(list.length / pageSize))} onPage={setPage} pageSize={pageSize} onPageSize={setPageSize} total={list.length} />
+
         </div>
       </div>
       {candidateSheet}

@@ -17,9 +17,10 @@ import { toast } from "sonner";
 import { Search, Send, Edit3, Trash2, StickyNote, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Prospect } from "@/lib/mock-data";
+import { PaginationBar, usePagination } from "@/components/pagination-bar";
 
 export const Route = createFileRoute("/prospection")({
-  head: () => ({ meta: [{ title: "Prospection — Seylane" }] }),
+  head: () => ({ meta: [{ title: "Agent IA Prospection — Seylane" }] }),
   component: ProspectionPage,
 });
 
@@ -42,6 +43,9 @@ function ProspectionPage() {
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "receivedAt", dir: "desc" });
   const [detail, setDetail] = useState<Prospect | null>(null);
   const [note, setNote] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
 
   const filtered = useMemo(() => {
     const list = state.prospects.filter((p) => {
@@ -77,8 +81,12 @@ function ProspectionPage() {
   const toggleSort = (k: SortKey) => setSort((s) => s.key === k ? { key: k, dir: s.dir === "asc" ? "desc" : "asc" } : { key: k, dir: "desc" });
   const SortIcon = ({ k }: { k: SortKey }) => sort.key !== k ? <ArrowUpDown className="h-3 w-3 opacity-40" /> : sort.dir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />;
 
+  const { slice: pageSlice, pageCount } = usePagination(filtered, pageSize, page);
+
+
+
   return (
-    <AppShell title="Prospection" subtitle={`${state.prospects.length} prospects entrants — site web, Instagram, LinkedIn`}>
+    <AppShell title="Agent IA Prospection" subtitle={`${state.prospects.length} prospects entrants — site web, Instagram, LinkedIn`}>
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="relative flex-1 min-w-[240px]">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -112,7 +120,7 @@ function ProspectionPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((p) => {
+                {pageSlice.map((p) => {
                   const sc = scorePill(p.score);
                   return (
                     <tr key={p.id} onClick={() => setDetail(p)}
@@ -144,6 +152,9 @@ function ProspectionPage() {
           </div>
         </CardContent>
       </Card>
+      <PaginationBar page={page} pageCount={pageCount} onPage={setPage} pageSize={pageSize} onPageSize={setPageSize} total={filtered.length} />
+
+
 
       <Sheet open={!!detail} onOpenChange={(v) => !v && setDetail(null)}>
         <SheetContent className="w-[560px] sm:max-w-none overflow-y-auto">

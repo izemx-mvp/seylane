@@ -12,12 +12,14 @@ import { Slider } from "@/components/ui/slider";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Search, Sparkles, Info, Check, Clock, Repeat, Mail, Linkedin, MessageCircle } from "lucide-react";
+import { Search, Sparkles, Info, Check, Clock, Repeat, Mail, Linkedin, MessageCircle, UserCog, Send, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Campaign, CampaignContact, HuntConfig } from "@/lib/mock-data";
+import { PaginationBar, usePagination } from "@/components/pagination-bar";
+import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/hunttool")({
-  head: () => ({ meta: [{ title: "HuntTool CRM — Seylane" }] }),
+  head: () => ({ meta: [{ title: "Agent IA Relance HuntTool — Seylane" }] }),
   component: HuntTool,
 });
 
@@ -40,7 +42,7 @@ function classifStyle(c: CampaignContact["classification"]) {
 function HuntTool() {
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("contacts");
   return (
-    <AppShell title="HuntTool CRM" subtitle="Messagerie automatique multi-canal — Email · LinkedIn · WhatsApp">
+    <AppShell title="Agent IA Relance HuntTool" subtitle="Messagerie automatique multi-canal — Email · LinkedIn · WhatsApp">
       <div className="flex justify-center mb-6">
         <div className="inline-flex bg-muted/60 p-1 rounded-full border border-border/60">
           {TABS.map((t) => (
@@ -65,6 +67,9 @@ function ContactsTab() {
   const [fChannel, setFChannel] = useState<string>("all");
   const [fCampaign, setFCampaign] = useState<string>("all");
   const [selected, setSelected] = useState<Row | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [chatMsg, setChatMsg] = useState("");
 
   const rows: Row[] = useMemo(() => {
     const all: Row[] = state.campaigns.flatMap((cm) => cm.contacts.map((c) => ({ contact: c, campaign: cm })));
@@ -85,6 +90,8 @@ function ContactsTab() {
   };
 
   const totalAuto = state.campaigns.filter((c) => c.origin === "auto").length;
+  const { slice: pageSlice, pageCount } = usePagination(rows, pageSize, page);
+
 
   return (
     <>
@@ -126,14 +133,18 @@ function ContactsTab() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {(() => null)()}
+                {pageSlice.map((r) => (
                   <tr key={r.contact.id} onClick={() => setSelected(r)} className="border-t hover:bg-muted/30 cursor-pointer transition-colors">
                     <td className="p-3 font-medium">{r.contact.name}</td>
                     <td className="p-3">{r.campaign.linkedPoste ?? "—"}</td>
                     <td className="p-3 text-muted-foreground">{r.campaign.linkedClient ?? "—"}</td>
                     <td className="p-3"><Badge variant="outline">{r.contact.channel}</Badge></td>
                     <td className="p-3 text-xs">{r.contact.sendStatus}</td>
-                    <td className="p-3"><span className={cn("text-[11px] px-2 py-0.5 rounded-full", classifStyle(r.contact.classification))}>{r.contact.classification}</span></td>
+                    <td className="p-3">
+                      <span className={cn("text-[11px] px-2 py-0.5 rounded-full", classifStyle(r.contact.classification))}>{r.contact.classification}</span>
+                      {r.contact.assignedHumanId && <Badge variant="outline" className="ml-1 text-[10px]"><UserCog className="h-3 w-3 mr-1" />Humain</Badge>}
+                    </td>
                     <td className="p-3 text-xs text-muted-foreground">{new Date(r.contact.lastAt).toLocaleString("fr-FR")}</td>
                   </tr>
                 ))}
@@ -145,6 +156,8 @@ function ContactsTab() {
           </div>
         </CardContent>
       </Card>
+      <PaginationBar page={page} pageCount={pageCount} onPage={setPage} pageSize={pageSize} onPageSize={setPageSize} total={rows.length} />
+
 
       <Sheet open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
         <SheetContent className="w-full sm:w-[520px] sm:max-w-none overflow-y-auto">
@@ -169,7 +182,45 @@ function ContactsTab() {
                     Bonjour {selected.contact.name.split(" ")[0]}, chez Seylane nous accompagnons {selected.campaign.linkedClient ?? "un client"} sur le poste {selected.campaign.linkedPoste ?? "confidentiel"}. Votre parcours pourrait correspondre — êtes-vous ouvert à en échanger ?
                   </div>
                   {selected.contact.rawReply && <div className="bg-muted p-3 rounded-lg text-sm">{selected.contact.rawReply}</div>}
+                  {(selected.contact.humanMessages ?? []).map((m, i) => (
+                    <div key={i} className={cn("p-3 rounded-lg text-sm", m.from === "human" ? "bg-gold/10 border border-gold/30" : "bg-muted")}>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{m.from === "human" ? "Agent humain" : "Candidat"} · {new Date(m.at).toLocaleString("fr-FR")}</div>
+                      {m.text}
+                    </div>
+                  ))}
                 </div>
+
+                {selected.contact.classification === "Ambigu" && !selected.contact.assignedHumanId && (
+                  <div className="border border-gold/40 bg-gold/5 rounded-lg p-3 space-y-2">
+                    <div className="text-xs font-semibold flex items-center gap-1"><UserCog className="h-3.5 w-3.5 text-gold" /> Réponse ambiguë — passer à un agent humain</div>
+                    <Select onValueChange={(v) => { updateContact(selected.campaign.id, selected.contact.id, { assignedHumanId: v }); toast.success("Assigné à un agent humain"); }}>
+                      <SelectTrigger><SelectValue placeholder="Choisir un agent…" /></SelectTrigger>
+                      <SelectContent>{state.users.filter((u) => u.role === "admin" || u.role === "collab").map((u) => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {selected.contact.assignedHumanId && (
+                  <div className="border rounded-lg p-3 space-y-2 bg-card">
+                    <div className="text-xs font-semibold flex items-center justify-between">
+                      <span className="flex items-center gap-1"><UserCog className="h-3.5 w-3.5 text-gold" /> Prise en charge humaine — {state.users.find((u) => u.id === selected.contact.assignedHumanId)?.name}</span>
+                      <button onClick={() => { updateContact(selected.campaign.id, selected.contact.id, { assignedHumanId: undefined }); }} className="text-muted-foreground hover:text-destructive"><X className="h-3.5 w-3.5" /></button>
+                    </div>
+                    <Textarea placeholder="Écrire au candidat…" value={chatMsg} onChange={(e) => setChatMsg(e.target.value)} rows={2} />
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="text-destructive" onClick={() => { updateContact(selected.campaign.id, selected.contact.id, { classification: "Refusé", assignedHumanId: undefined }); toast.success("Marqué comme refusé — conversation clôturée"); }}>Clôturer · Refusé</Button>
+                        <Button size="sm" variant="outline" className="text-success" onClick={() => { updateContact(selected.campaign.id, selected.contact.id, { classification: "Intéressé", assignedHumanId: undefined }); toast.success("Marqué comme intéressé — conversation clôturée"); }}>Clôturer · Intéressé</Button>
+                      </div>
+                      <Button size="sm" className="gap-1" disabled={!chatMsg.trim()} onClick={() => {
+                        const msgs = [...(selected.contact.humanMessages ?? []), { from: "human" as const, text: chatMsg.trim(), at: new Date().toISOString() }];
+                        updateContact(selected.campaign.id, selected.contact.id, { humanMessages: msgs, lastAt: new Date().toISOString() });
+                        setChatMsg("");
+                      }}><Send className="h-3.5 w-3.5" /> Envoyer</Button>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <div className="text-xs font-semibold mb-2">Reclasser la réponse</div>
                   <Select value={selected.contact.classification} onValueChange={(v) => { updateContact(selected.campaign.id, selected.contact.id, { classification: v as CampaignContact["classification"] }); toast.success("Réponse reclassifiée"); }}>
@@ -179,6 +230,7 @@ function ContactsTab() {
                 </div>
                 <div className="text-xs text-muted-foreground">Dernière interaction : {new Date(selected.contact.lastAt).toLocaleString("fr-FR")}</div>
               </div>
+
             </>
           )}
         </SheetContent>
@@ -237,8 +289,16 @@ function ConfigTab() {
               })}
             </div>
           </div>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <div className="flex items-center justify-between mb-2"><Label className="text-sm">Attente après envoi de l'offre</Label><span className="text-sm font-semibold">{cfg.waitDaysAfterOffer ?? 3} j</span></div>
+              <Slider value={[cfg.waitDaysAfterOffer ?? 3]} onValueChange={(v) => setCfg((c) => ({ ...c, waitDaysAfterOffer: v[0] }))} min={0} max={14} step={1} />
+              <p className="text-[11px] text-muted-foreground mt-1">Délai avant que l'IA n'entame la première relance après l'envoi de l'offre.</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
+
 
       <Card className="soft-shadow">
         <CardContent className="p-6 space-y-4">
