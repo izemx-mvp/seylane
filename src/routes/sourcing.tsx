@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
+import { PaginationBar } from "@/components/pagination-bar";
 import { useStore } from "@/lib/store";
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
